@@ -4,16 +4,23 @@
 ##
 # return: dataframe including simulated beta values
 
-resBoot <- function(model,iterations){
+resBoot <- function(model,iterations, nonParametric = TRUE){
   betas <- as.numeric(coefficients(model))
   residuals <- resid(model)
-  n <- length(residuals)
+  len <- length(residuals)
+  if(!nonParametric){
+    a <- anova(model)
+    a <- a$`Mean Sq`
+    sigma_std <- sqrt(a[length(a)])
+    residuals <- rnorm(n = len,0,sigma_std)
+  }
+  
   C <- model.matrix(model) # model in matrix form
   # simulated beta values
   boot_Betas <- matrix(nrow = iterations, ncol = length(betas))
   for(i in 1:iterations){ 
     # residual sample with replacement
-    y_residualSample <- sample(residuals,n,replace = T)
+    y_residualSample <- sample(residuals,len,replace = T)
     
     # Bootstrap responses
     y_star <- C %*% betas + y_residualSample
@@ -25,13 +32,9 @@ resBoot <- function(model,iterations){
       boot_Betas[i,a] <- beta_star[a]
     }
   }
-  return(boot_Betas)
+  return(as.data.frame(boot_Betas))
 }
 
-values <- resBoot(lm_sepal,100)
-values
-mean(values[,1])
-mean(values[,2])
 
 ## Bootsrap pairs in regression model 
 # @ param model: regressio model lm.function
@@ -71,6 +74,6 @@ pairsBoot <- function(model, iterations){
     }
     
   }
-  return(boot_Betas)
+  return(as.data.frame(boot_Betas))
 }
 
