@@ -1,18 +1,23 @@
+# Markus Linjamäki
+# 18.3.2021
+
 ## Bootsrap residuals in regression model 
 # @ param model: regressio model lm.function
 # @ param iterations: number of iterations
 ##
 # return: dataframe including simulated beta values
 
-resBoot <- function(model,iterations, nonParametric = TRUE){
+resBoot <- function(model,iterations, nonParametric = TRUE, wild = FALSE){
   betas <- as.numeric(coefficients(model))
   residuals <- resid(model)
+  pi <- (5 + sqrt(5)) / 10
   len <- length(residuals)
+  # if nonparametric sample from normal dist
   if(!nonParametric){
     a <- anova(model)
     a <- a$`Mean Sq`
-    sigma_std <- sqrt(a[length(a)])
-    residuals <- rnorm(n = len,0,sigma_std)
+    sigma_std <- sqrt(a[length(a)]) # estimated sd
+    residuals <- rnorm(n = len,0,sigma_std) # Sampling from normal distribution
   }
   
   C <- model.matrix(model) # model in matrix form
@@ -20,13 +25,17 @@ resBoot <- function(model,iterations, nonParametric = TRUE){
   boot_Betas <- matrix(nrow = iterations, ncol = length(betas))
   for(i in 1:iterations){ 
     # residual sample with replacement
-    y_residualSample <- sample(residuals,len,replace = T)
-    
+    residualSample <- sample(residuals,len,replace = T)
+    if(wild){
+      wildSample <- sample(c((1-sqrt(5)) / 2, (1+sqrt(5)) / 2), size = len, replace = T, prob = c(pi,1-pi))
+      residualSample <- residualSample * wildSample
+    }
     # Bootstrap responses
-    y_star <- C %*% betas + y_residualSample
+    y_star <- C %*% betas + residualSample
     
     # bootstrap least-square estimates
     beta_star <- solve(t(C) %*% C) %*% t(C) %*% y_star
+
     
     for(a in 1:length(betas)){
       boot_Betas[i,a] <- beta_star[a]
