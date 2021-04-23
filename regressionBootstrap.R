@@ -21,7 +21,7 @@ resBoot <- function(model,iterations, wild = FALSE){
     residualSample <- sample(residuals,len,replace = T)
     if(wild){
       wildSample <- sample(c((1-sqrt(5)) / 2, (1+sqrt(5)) / 2), size = len, replace = T, prob = c(pi,1-pi))
-      residualSample <- residualSample * wildSample
+      residualSample <- residuals * wildSample
     }
     # Bootstrap responses
     y_star <- C %*% betas + residualSample
