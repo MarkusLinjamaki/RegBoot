@@ -7,18 +7,11 @@
 ##
 # return: dataframe including simulated beta values
 
-resBoot <- function(model,iterations, nonParametric = TRUE, wild = FALSE){
+resBoot <- function(model,iterations, wild = FALSE){
   betas <- as.numeric(coefficients(model))
   residuals <- resid(model)
   pi <- (5 + sqrt(5)) / 10
   len <- length(residuals)
-  # if nonparametric sample from normal dist
-  if(!nonParametric){
-    a <- anova(model)
-    a <- a$`Mean Sq`
-    sigma_std <- sqrt(a[length(a)]) # estimated sd
-    residuals <- rnorm(n = len,0,sigma_std) # Sampling from normal distribution
-  }
   
   C <- model.matrix(model) # model in matrix form
   # simulated beta values
